@@ -1,4 +1,4 @@
-# bariendo/domain/food/dataclasses.py
+# prenuvo_pii/domain/food/dataclasses.py
 
 from dataclasses import dataclass, field
 from datetime import date

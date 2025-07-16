@@ -1,4 +1,4 @@
-# from bariendo.database.models.user import User
+# from prenuvo_pii.database.models.user import User
 from bariendo.database.models.food import (
 FoodIngredientAssoc,
 FoodNutrientAssoc,

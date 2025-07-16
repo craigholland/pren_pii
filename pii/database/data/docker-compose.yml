@@ -12,5 +12,5 @@ services:
     volumes:
       - ${PGDATA_VOLUME}:/var/lib/postgresql/data
 volumes:
-  pgdata_bariendo:
+  pgdata:
     external: true

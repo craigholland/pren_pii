@@ -11,14 +11,14 @@ Features
 --------
 * **UUID primary‑key normalisation** – any attribute named ``id`` (or the
   value of :pyattr:`_pk`) is coerced to a canonical UUID string via
-  :pyfunc:`bariendo.common.utils.uuid_str.uuid_str` every time it is
+  :pyfunc:`prenuvo_pii.common.utils.uuid_str.uuid_str` every time it is
   assigned.
 * **Automatic runtime type‑checking** on construction (``__post_init__``)
   and via :py:meth:`validate_types`. Static flag
   :pyattr:`__skip_type_validation__` allows per‑class opt‑out.
 * **Relationship introspection** – :py:meth:`relationship_fields` mirrors the
   ORM‑side helper and returns a mapping of ``field_name → target dataclass``
-  for all :pyclass:`~bariendo.common.typing.relationship.RelationshipList`
+  for all :pyclass:`~prenuvo_pii.common.typing.relationship.RelationshipList`
   fields.
 
 Python 3.12 compliant – subclasses the plain ``list`` class rather than the

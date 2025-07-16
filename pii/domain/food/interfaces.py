@@ -1,4 +1,4 @@
-# bariendo/domain/food/interface.py
+# prenuvo_pii/domain/food/interface.py
 
 from bariendo.domain.food.profiles import FoodProfile
 

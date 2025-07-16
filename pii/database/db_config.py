@@ -1,11 +1,11 @@
 import os
 
 # Allow override via .env or environment for flexibility
-DB_USER = os.getenv("POSTGRES_USER", "bariendo")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "bariendo")
+DB_USER = os.getenv("POSTGRES_USER", "prenuvo_pii_user")
+DB_PASS = os.getenv("POSTGRES_PASSWORD", "prenuvo_pii_pass")
 DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "bariendo")
+DB_NAME = os.getenv("POSTGRES_DB", "prenuvo_pii_db")
 DB_CONNECT_TIMEOUT = 5
 
 SQLALCHEMY_DATABASE_URL = (

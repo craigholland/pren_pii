@@ -37,8 +37,8 @@ Build an app for dietitians and health-conscious consumers to:
 ## 1. Clone the Repository
 
 ```bash
-git clone git@github.com:craigholland/bariendo.git
-cd bariendo
+git clone git@github.com:craigholland/prenuvo_pii.git
+cd prenuvo_pii
 ```
 
 ---
@@ -59,10 +59,10 @@ Open `bariendo/database/db_config.py` and review:
 
 ```python
 DB_IMAGE           = "postgres:15"
-DB_CONTAINER_NAME  = "bariendo-db"
+DB_CONTAINER_NAME  = "prenuvo_pii-db"
 DB_USER            = "bariendo_user"
 DB_PASSWORD        = "securepassword"
-DB_NAME            = "bariendo"
+DB_NAME            = "prenuvo_pii"
 SEED_DATA_FILENAME = "nutrient_data.json"
 SEED_DATA_PATH     = Path(__file__).parent / "data"
 ```
@@ -79,8 +79,8 @@ SEED_DATA_PATH     = Path(__file__).parent / "data"
 ## 4. Start the Database & Seed Data
 
 ```bash
-chmod +x bariendo/database/bin/start_db.sh
-./bariendo/database/bin/start_db.sh
+chmod +x prenuvo_pii/database/bin/start_db.sh
+./prenuvo_pii/database/bin/start_db.sh
 ```
 
 What this does:
@@ -93,8 +93,8 @@ What this does:
 ## 5. Tear Down / Reset the Database
 
 ```bash
-chmod +x bariendo/database/bin/nuke_db.sh
-./bariendo/database/bin/nuke_db.sh
+chmod +x prenuvo_pii/database/bin/nuke_db.sh
+./prenuvo_pii/database/bin/nuke_db.sh
 ```
 
 ---
