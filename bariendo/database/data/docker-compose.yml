@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: ${CONTAINER_NAME:-pgcontainer}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pgpass}
+      POSTGRES_DB: ${POSTGRES_DB:-pgdata}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${PGDATA_VOLUME}:/var/lib/postgresql/data
+volumes:
+  pgdata_bariendo:
+    external: true
