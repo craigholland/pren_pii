@@ -1,8 +1,8 @@
 from typing import List, Optional, Any, TypeVar
 from abc import ABC, abstractmethod
 from dataclasses import is_dataclass, fields
-from bariendo.common.utils.dataclass_transformer import DataclassTransformer
-from bariendo.common.utils.classproperty import classproperty
+from pii.common.utils.dataclass_transformer import DataclassTransformer
+from pii.common.utils.classproperty import classproperty
 
 T = TypeVar("T")
 

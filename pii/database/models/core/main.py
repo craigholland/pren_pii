@@ -1,7 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, MetaData
 from sqla_wrapper import SQLAlchemy
-from bariendo.database import db_config
+from pii.database import db_config
 Base = declarative_base()
 
 convention = {

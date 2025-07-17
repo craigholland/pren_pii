@@ -3,9 +3,9 @@ import ijson
 import argparse
 from tqdm import tqdm
 from sqlalchemy.exc import IntegrityError
-from bariendo.database.models.core.main import db
-from bariendo.database.db_config import SEED_JSON_PATH, SEED_JSON_TOTAL_RECORDS, DEFAULT_RECORD_LIMIT
-from bariendo.database.models.food import (
+from pii.database.models.core.main import db
+from pii.database.db_config import SEED_JSON_PATH, SEED_JSON_TOTAL_RECORDS, DEFAULT_RECORD_LIMIT
+from pii.database.models.food import (
     Food,
     Ingredient,
     FoodIngredientAssoc,

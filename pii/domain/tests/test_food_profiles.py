@@ -1,8 +1,8 @@
 
 import pytest
-from bariendo.domain.food.profiles.food_profile import FoodProfile
-from bariendo.domain.food.profiles.nutrient_profile import NutrientProfile
-from bariendo.domain.food.dataclasses import Food, Nutrient
+from pii.domain.food.profiles.food_profile import FoodProfile
+from pii.domain.food.profiles.nutrient_profile import NutrientProfile
+from pii.domain.food.dataclasses import Food, Nutrient
 
 @pytest.fixture
 def sample_food_dict():

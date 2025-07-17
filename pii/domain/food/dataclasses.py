@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
-from bariendo.common.abstracts.base_dataclass import BaseDataclass, RelationshipList
+from pii.common.abstracts.base_dataclass import BaseDataclass, RelationshipList
 
 @dataclass
 class Ingredient(BaseDataclass):

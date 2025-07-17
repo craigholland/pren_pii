@@ -13,7 +13,7 @@ fi
 
 # Defaults if .env is missing
 PGDATA_VOLUME="${PGDATA_VOLUME:-pgdata}"
-CONTAINER_NAME="${CONTAINER_NAME:-bariendo_db}"
+CONTAINER_NAME="${CONTAINER_NAME:-prenuvo_pii_db}"
 POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:15}"
 
 echo "🔍 Looking for container '$CONTAINER_NAME'..."

@@ -1,5 +1,5 @@
-from bariendo.database.models.core.main import db
-from bariendo.database.models.core.service_object import ServiceObject
+from pii.database.models.core.main import db
+from pii.database.models.core.service_object import ServiceObject
 from sqlalchemy import Column, Integer, String, Boolean, UUID
 from sqlalchemy.orm import mapped_column
 

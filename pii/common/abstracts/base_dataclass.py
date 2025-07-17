@@ -3,7 +3,7 @@ from types import UnionType
 from typing import (
     Any, Generic, TypeVar, ClassVar, get_args, get_origin, Union)
 
-from bariendo.common.utils.uuid_str import uuid_str
+from pii.common.utils.uuid_str import uuid_str
 
 """Common base mix‑in for domain dataclasses.
 

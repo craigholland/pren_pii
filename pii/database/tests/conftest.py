@@ -1,7 +1,7 @@
 import pytest
 from testcontainers.postgres import PostgresContainer
 from sqlalchemy import create_engine, text
-from bariendo.database.models.core.main import Base, db
+from pii.database.models.core.main import Base, db
 
 @pytest.fixture(scope="session")
 def engine():

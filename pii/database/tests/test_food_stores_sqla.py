@@ -1,12 +1,12 @@
 import pytest
 from uuid import UUID
 
-from bariendo.domain.food.dataclasses import (
+from pii.domain.food.dataclasses import (
     Food, Ingredient, Nutrient,
     FoodNutrientSource, FoodNutrientDerivation,
     FoodNutrient, LabelNutrients,
 )
-from bariendo.database.stores.food import (
+from pii.database.stores.food import (
     FoodStore, IngredientStore, NutrientStore,
     FoodNutrientSourceStore, FoodNutrientDerivationStore,
     FoodNutrientStore, LabelNutrientsStore,

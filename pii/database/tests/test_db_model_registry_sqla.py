@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import is_dataclass, dataclass
-from bariendo.database.models.core.service_object import ServiceObjectDC
-from bariendo.database.store_adapters.sqlalchemy_store import BaseStoreSQLAlchemy
+from pii.database.models.core.service_object import ServiceObjectDC
+from pii.database.store_adapters.sqlalchemy_store import BaseStoreSQLAlchemy
 
 
 def test_serviceobjectdc_registries_are_inverse():

@@ -3,11 +3,11 @@ from sqlalchemy import Column, DateTime, func, text, Text, JSON, inspect
 from sqlalchemy.dialects.postgresql import UUID
 from dataclasses import is_dataclass, fields, asdict
 from typing import Any, Type, ClassVar, Dict, TypeVar
-from bariendo.common.utils.classproperty import classproperty
-from bariendo.common.utils.uuid_str import uuid_str
-from bariendo.database.models.core.main import Base
+from pii.common.utils.classproperty import classproperty
+from pii.common.utils.uuid_str import uuid_str
+from pii.database.models.core.main import Base
 from sqlalchemy.inspection import inspect
-from bariendo.database.models.core.main import db
+from pii.database.models.core.main import db
 from sqlalchemy.ext.associationproxy import AssociationProxy
 
 T = TypeVar("T")

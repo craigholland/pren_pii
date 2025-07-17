@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Dict, Any, TypeVar, Generic, Optional, Type
 from dataclasses import is_dataclass
-from bariendo.common.abstracts.base_store import BaseStore
+from pii.common.abstracts.base_store import BaseStore
 T = TypeVar('T')
 
 

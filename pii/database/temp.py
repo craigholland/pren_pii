@@ -1,4 +1,4 @@
-from bariendo.database.db_config import SEED_JSON_PATH
+from pii.database.db_config import SEED_JSON_PATH
 import json
 
 

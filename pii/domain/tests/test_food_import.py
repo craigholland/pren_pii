@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 import pytest
 
-from bariendo.domain.food.dataclasses import Food, Nutrient
-from bariendo.domain.food.profiles.food_profile import FoodProfile
-from bariendo.domain.food.profiles.nutrient_profile import NutrientProfile
+from pii.domain.food.dataclasses import Food, Nutrient
+from pii.domain.food.profiles.food_profile import FoodProfile
+from pii.domain.food.profiles.nutrient_profile import NutrientProfile
 
 # Load actual test data
 TEST_DATA_PATH = Path(__file__).parent.parent.parent.parent / "tests" / "test_data.json"

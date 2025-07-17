@@ -2,11 +2,11 @@ import json
 import pytest
 from pathlib import Path
 
-from bariendo.domain.food.dataclasses import Food, Nutrient
-from bariendo.domain.food.profiles.food_profile import FoodProfile
-from bariendo.domain.food.profiles.nutrient_profile import NutrientProfile
+from pii.domain.food.dataclasses import Food, Nutrient
+from pii.domain.food.profiles.food_profile import FoodProfile
+from pii.domain.food.profiles.nutrient_profile import NutrientProfile
 
-from bariendo.database.stores.food import (
+from pii.database.stores.food import (
     FoodStore,
     NutrientStore,
 )

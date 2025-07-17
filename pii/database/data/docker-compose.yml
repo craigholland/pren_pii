@@ -12,5 +12,5 @@ services:
     volumes:
       - ${PGDATA_VOLUME}:/var/lib/postgresql/data
 volumes:
-  pgdata:
+  prenuvo_pii_pgdata:
     external: true

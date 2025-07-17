@@ -1,6 +1,6 @@
-from bariendo.database.store_adapters.sqlalchemy_store import BaseStoreSQLAlchemy
+from pii.database.store_adapters.sqlalchemy_store import BaseStoreSQLAlchemy
 from typing import Any, Optional, TypeVar
-from bariendo.database.models.food import (
+from pii.database.models.food import (
     Food,
     Ingredient,
     Nutrient,

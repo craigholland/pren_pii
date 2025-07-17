@@ -1,5 +1,5 @@
-from bariendo.common.abstracts.base_store_nodb import BaseStore_NoDB
-from bariendo.domain.food.dataclasses import (
+from pii.common.abstracts.base_store_nodb import BaseStore_NoDB
+from pii.domain.food.dataclasses import (
     Ingredient,
     Nutrient,
     FoodNutrientSource,

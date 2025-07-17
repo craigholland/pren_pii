@@ -12,12 +12,11 @@ else
   echo "Warning: .env file not found at $ENV_FILE; using defaults"
 fi
 
-# Default names if .env is missing
-PGDATA_VOLUME="${PGDATA_VOLUME:-pgdata}"
-CONTAINER_NAME="${CONTAINER_NAME:-bariendo_db}"
-POSTGRES_USER="${POSTGRES_USER:-bariendo}"
+# Set defaults if not provided via env
+PGDATA_VOLUME="${PGDATA_VOLUME:-prenuvo_pii_pgdata}"
+CONTAINER_NAME="${CONTAINER_NAME:-prenuvo_pii_db}"
+POSTGRES_USER="${POSTGRES_USER:-prenuvo_pii_user}"
 
-# Inform about the volume in use
 echo "Using volume: $PGDATA_VOLUME"
 
 # Ensure Docker volume exists
@@ -31,33 +30,32 @@ fi
 # Determine docker-compose command to use
 DC_CMD="${DOCKER_COMPOSE_CMD:-docker-compose}"
 
-# Define compose file path
+# Compose file setup
 data_dir="$SCRIPT_DIR/../data"
 compose_file="$data_dir/docker-compose.yml"
-
-# Backup original compose file if not already backed up
 backup_file="${compose_file}.bak"
+
 if [ ! -f "$backup_file" ]; then
   echo "Backing up original compose file to $backup_file"
   cp "$compose_file" "$backup_file"
 fi
 
-# Regenerate compose file header (everything before volumes:)
+# Rebuild docker-compose.yml with external volume declaration
 awk '/^volumes:/ {exit} {print}' "$backup_file" > "$compose_file"
 
-# Append static volume declaration
 cat <<EOF >> "$compose_file"
 volumes:
   $PGDATA_VOLUME:
     external: true
 EOF
 
-# Start the Postgres container
+# Start the container
 echo "Starting Postgres container using '$DC_CMD'..."
 pushd "$data_dir" >/dev/null
 $DC_CMD up -d
 popd >/dev/null
 
+# Wait for Postgres to become available
 echo "Waiting for Postgres to be available…"
 until docker exec "$CONTAINER_NAME" pg_isready -U "$POSTGRES_USER" > /dev/null 2>&1; do
   sleep 1
@@ -66,4 +64,4 @@ done
 
 echo "Postgres is up, running migrations and seed…"
 bash "$SCRIPT_DIR/migrate.sh"
-#bash "$SCRIPT_DIR/seed_db.sh"
+# bash "$SCRIPT_DIR/seed_db.sh"

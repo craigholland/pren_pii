@@ -11,9 +11,8 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '..', 'data', '.env')
 load_dotenv(dotenv_path)
 
 # Import SQLAlchemy URL and Base metadata
-from bariendo.database.db_config import SQLALCHEMY_DATABASE_URL
-from bariendo.database.models.core.service_object import ServiceObject
-
+from pii.database.db_config import SQLALCHEMY_DATABASE_URL
+from pii.database.models.core.service_object import ServiceObject
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

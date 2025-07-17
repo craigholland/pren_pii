@@ -3,10 +3,10 @@ from pathlib import Path
 import pytest
 from uuid import UUID
 
-from bariendo.domain.food.dataclasses import Food
-from bariendo.database.stores.food import FoodStore
-from bariendo.domain.food.profiles import FoodProfile
-from bariendo.domain.food.interfaces import FoodInterface
+from pii.domain.food.dataclasses import Food
+from pii.database.stores.food import FoodStore
+from pii.domain.food.profiles import FoodProfile
+from pii.domain.food.interfaces import FoodInterface
 
 # point the FoodProfile at the SQLAlchemy store
 FoodProfile._store = FoodStore

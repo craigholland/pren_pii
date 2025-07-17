@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-from bariendo.common.abstracts.base_profile import BaseProfile
-from bariendo.domain.food.dataclasses import FoodNutrientSource
-from bariendo.domain.food.stores import FoodNutrientSourceStore_NoDB
+from pii.common.abstracts.base_profile import BaseProfile
+from pii.domain.food.dataclasses import FoodNutrientSource
+from pii.domain.food.stores import FoodNutrientSourceStore_NoDB
 
 
 class FoodNutrientSourceProfile(BaseProfile[FoodNutrientSource]):

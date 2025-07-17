@@ -5,7 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
-from bariendo.common.utils.dataclass_transformer import DataclassTransformer
+from pii.common.utils.dataclass_transformer import DataclassTransformer
 
 
 @dataclass

@@ -1,6 +1,6 @@
 # prenuvo_pii/domain/food/interface.py
 
-from bariendo.domain.food.profiles import FoodProfile
+from pii.domain.food.profiles import FoodProfile
 
 class FoodInterface:
     """

@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Date, Boolean, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import association_proxy
-from bariendo.database.models.core.service_object import ServiceObject, ServiceObjectDC
-from bariendo.database.models.core.main import db
-from bariendo.domain.food.dataclasses import (
+from pii.database.models.core.service_object import ServiceObject, ServiceObjectDC
+from pii.database.models.core.main import db
+from pii.domain.food.dataclasses import (
     Food as FoodDC,
     FoodNutrient as FoodNutrientDC,
     FoodNutrientSource as FoodNutrientSourceDC,
