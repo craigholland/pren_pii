@@ -75,7 +75,6 @@ This will:
 - Mount a named volume for persistence
 - Default port: `5432`
 - Database name: `pren_pii`
-- User: `craig` | Password: `craig`
 
 > You can change these values in the `.env` file in the `pii/database/` directory.
 
