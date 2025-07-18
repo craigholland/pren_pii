@@ -1,147 +1,142 @@
-# Bariendo
+# Prenuvo PII Service
 
-A simple food-and-nutrition database backend and diet recommendation tool powered by Docker Compose, Poetry, and Alembic.
-
----
-
-## Assignment Overview
-
-**Nutrition and Diet Recommendation Tool**  
-Build an app for dietitians and health-conscious consumers to:
-- **Search** USDA FoodData Central for common foods  
-- **View basic nutritional facts** (calories, protein, fat, carbs)  
-- **Manage a list of favorites** or ingredients  
-- _(Optional)_ Add one extra feature (e.g. AI chatbot, visualizations, meal planning, performant API)
+A modular, testable, and domain-driven Python backend for managing Personally Identifiable Information (PII) with strict type safety, UUID-based identifiers, and support for both database-backed and in-memory stores.
 
 ---
 
-## Prerequisites
+## 🔧 Project Structure
 
-1. **Git**  
-2. **Docker & Docker Compose**  
-   - Docker Desktop (Windows/macOS) or Docker Engine + Docker Compose (Linux)  
-   - Verify:
-     ```bash
-     docker --version
-     docker-compose --version
-     ```
-3. **Poetry**  
-   - Install via [https://python-poetry.org/docs/#installation](https://python-poetry.org/docs/#installation)  
-   - Verify:
-     ```bash
-     poetry --version
-     ```
+This project adheres to **Clean Architecture** and SOLID principles:
 
----
-
-## 1. Clone the Repository
-
-```bash
-git clone git@github.com:craigholland/prenuvo_pii.git
-cd prenuvo_pii
+```
+pii/
+├── common/          # Abstract base classes, utilities, type enforcement
+├── domain/          # Pure dataclasses (no dependencies)
+├── database/        # SQLAlchemy models, migration scripts, and store adapters
 ```
 
 ---
 
-## 2. Install Python Dependencies
+## 🚀 Quickstart
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/craigholland/pren_pii.git
+cd pren_pii
+```
+
+---
+
+### 2. Install Poetry
+
+Make sure you have [Poetry](https://python-poetry.org/docs/#installation) installed:
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Then make sure it's on your PATH:
+
+```bash
+poetry --version
+```
+
+> ⚠️ Python 3.12 is required. You can use [pyenv](https://github.com/pyenv/pyenv) or another tool to manage versions.
+
+---
+
+### 3. Install Dependencies
 
 ```bash
 poetry install
 ```
 
-This creates an isolated virtual environment and installs all required packages.
+This will create a virtual environment and install all dependencies defined in `pyproject.toml`.
 
----
-
-## 3. Configure the Database
-
-Open `bariendo/database/db_config.py` and review:
-
-```python
-DB_IMAGE           = "postgres:15"
-DB_CONTAINER_NAME  = "prenuvo_pii-db"
-DB_USER            = "bariendo_user"
-DB_PASSWORD        = "securepassword"
-DB_NAME            = "prenuvo_pii"
-SEED_DATA_FILENAME = "nutrient_data.json"
-SEED_DATA_PATH     = Path(__file__).parent / "data"
-```
-
-1. **Adjust** these values to match your environment.  
-2. **Place your seed file** (e.g. `nutrient_data.json`, >3 GB) in:
-   ```
-   bariendo/database/data/
-   ```
-   > **Note:** We seed only the first 500 records by default for quick startup. Full seeding (~450 000 records) is possible but may take hours.
-
----
-
-## 4. Start the Database & Seed Data
+To activate the virtual environment:
 
 ```bash
-chmod +x prenuvo_pii/database/bin/start_db.sh
-./prenuvo_pii/database/bin/start_db.sh
+poetry shell
 ```
-
-What this does:
-1. Spins up PostgreSQL via Docker Compose  
-2. Runs Alembic migrations  
-3. Seeds the first 500 records from your JSON file
 
 ---
 
-## 5. Tear Down / Reset the Database
+### 4. Set Up the Database (PostgreSQL + Alembic)
+
+#### Spin up PostgreSQL via Docker
 
 ```bash
-chmod +x prenuvo_pii/database/bin/nuke_db.sh
-./prenuvo_pii/database/bin/nuke_db.sh
+./pii/database/bin/start_db.sh
 ```
 
----
+This will:
+- Launch a local PostgreSQL container (`pren_pii_postgres`)
+- Mount a named volume for persistence
+- Default port: `5432`
+- Database name: `pren_pii`
+- User: `craig` | Password: `craig`
 
-## Approach and Key Design Decisions
-
-- **Poetry & Docker Compose** for reproducible environments and dependency isolation.  
-- **Alembic** for schema migrations—keeps database evolution under version control.  
-- **JSON seed file** (USDA FoodData Central subset) loaded via a small custom script—allows you to swap or subset data without rebuilding images.  
-- **Shell scripts** (`start_db.sh`, `nuke_db.sh`) wrap the common workflows and make onboarding as simple as:
-  1. Grant execute permission  
-  2. Run the script  
-- **Configurable** via `db_config.py`—all Docker-related settings, filenames, and paths live in one place.  
-- **Speed vs completeness** trade-off: seed only 500 records by default to get up and running in minutes; full dataset seeding is opt-in.
+> You can change these values in the `.env` file in the `pii/database/` directory.
 
 ---
 
-## What I’d Improve or Expand with More Time
+### 5. Run Migrations
 
-1. **Backend API**  
-   - Expose REST or GraphQL endpoints for search, detail retrieval, and favorites management  
-   - Pagination, filtering, and caching for performant queries  
+```bash
+cd pii/database/
+poetry run alembic upgrade head
+```
 
-2. **Frontend/UI**  
-   - Simple web interface (React/Vue) for dietitians and consumers  
-   - Nutritional breakdown visualizations (pie charts, bar graphs)  
-
-3. **Favorites & Meal Plans**  
-   - Allow users to save favorites and assemble simple meal plans  
-   - Aggregate nutritional totals per meal/day  
-
-4. **Optional Advanced Feature**  
-   - **AI Chatbot**: Integrate an LLM (Anthropic API) to answer diet-related questions  
-   - **Insights**: Surface data trends (e.g., “Top 10 highest-protein foods”)  
-
-5. **Dataset Flexibility**  
-   - Fetch directly from USDA API for branded subsets  
-   - Incremental seeding or background job to load full dataset without blocking startup  
-
-6. **Testing & CI**  
-   - Unit and integration tests for migrations, seed logic, and API  
-   - GitHub Actions to lint, test, and build images on each push
+This will apply all current migration scripts from the `migrations/` folder and set up the schema.
 
 ---
 
-## Submission
+### 6. Running Tests
 
-- Private GitHub repo: share with **bariendo-dev**  
-- Includes this README, committed code, and meaningful commit history.  
-- Ready for further feature work or production hardening.
+> Not yet implemented, but the architecture is fully test-ready. Coming soon.
+
+---
+
+## 🧠 Design Philosophy
+
+- **Domain-Driven**: Business rules live in pure dataclasses with zero external dependencies.
+- **Pluggable Storage**: Swap in-memory stores and SQLAlchemy-backed stores without changing the domain logic.
+- **Validator Support**: All ORM models may define `__validator__` to register custom pre-commit logic.
+- **Typed UUIDs**: Primary keys and foreign keys are all UUID strings, enforced both in the DB and dataclass layer.
+- **RelationshipList**: Custom `RelationshipList[T]` type allows introspection and recursive type checking on 1:M relationships.
+
+---
+
+## 📁 Directory Reference
+
+| Directory | Purpose |
+|----------|---------|
+| `pii/common/` | Base classes (`BaseDataclass`, `BaseStore`, `BaseProfile`, etc.) |
+| `pii/domain/` | Pure dataclass definitions of core entities |
+| `pii/database/` | SQLAlchemy models, migration scripts, and database bootstrapping logic |
+| `pii/database/models/core/validators/` | Optional validation logic for domain entities |
+
+---
+
+## 🗺️ Roadmap
+
+- ✅ Clean alignment of domain, common, and database layers  
+- ⏳ Add unit and integration tests  
+- ⏳ Implement profile and store logic for key entities  
+- ⏳ Introduce service orchestration (interfaces, lifecycle hooks)  
+- ⏳ Logging, CLI entrypoints, and dev tools
+
+---
+
+## 🧪 Dev Notes
+
+- Uses UUID strings, not native `uuid.UUID` objects, to simplify JSON serialization and DB compatibility.
+- Validators are modular and dynamically invoked if a model defines `__validator__`.
+- To inspect database objects and relationships, use any PostgreSQL GUI (e.g., [pgAdmin](https://www.pgadmin.org/) or [DataGrip](https://www.jetbrains.com/datagrip/)).
+
+---
+
+## 🧑‍💻 Author
+
+**Craig Holland**
