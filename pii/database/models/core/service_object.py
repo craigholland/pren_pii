@@ -108,6 +108,11 @@ class ServiceObject(Base):
             del rel_map[key]
         return rel_map
 
+    def validate(self):
+        validator = getattr(self, "__validator__", None)
+        if validator is not None:
+            validator.validate(self)
+
 class ServiceObjectDC(ServiceObject):
     __abstract__ = True
     __allow_unmapped__ = True

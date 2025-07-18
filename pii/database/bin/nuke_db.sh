@@ -12,9 +12,9 @@ else
 fi
 
 # Defaults if .env is missing
-PGDATA_VOLUME="${PGDATA_VOLUME:-pgdata}"
+PGDATA_VOLUME="${PGDATA_VOLUME:-prenuvo_pii_pgdata}"
 CONTAINER_NAME="${CONTAINER_NAME:-prenuvo_pii_db}"
-POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:15}"
+POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:16}"
 
 echo "🔍 Looking for container '$CONTAINER_NAME'..."
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
