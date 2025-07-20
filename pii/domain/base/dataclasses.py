@@ -38,12 +38,25 @@ class Organization(Party):
 
 
 # -----------------------------------------
-# Roles – Concrete
+# Roles
 # -----------------------------------------
 
 @dataclass
-class SystemRole(BaseDataclass):
+class PartyRole(BaseDataclass):
     id: Optional[str] = None
     name: str = ""
     description: Optional[str] = None
     party_id: Optional[str] = None
+
+@dataclass
+class PersonRole(PartyRole):
+    pass
+
+@dataclass
+class OrganizationRole(PartyRole):
+    pass
+
+@dataclass
+class SystemRole(PartyRole):
+    pass
+
