@@ -1,9 +1,10 @@
 from dataclasses import fields
 from types import UnionType
 from typing import (
-    Any, Generic, TypeVar, ClassVar, get_args, get_origin, Union)
+    Any, Generic, TypeVar, ClassVar, get_args, get_origin, Union
+)
 
-from pii.common.utils.uuid_str import uuid_str
+from pii.common.utils.uuid_str import uuid_str, UUIDStr
 
 """Common base mix‑in for domain dataclasses.
 
@@ -25,18 +26,19 @@ Python 3.12 compliant – subclasses the plain ``list`` class rather than the
 ``list[T]`` generic alias.
 """
 
-
 __all__ = ["BaseDataclass"]
 
 T = TypeVar("T")
 
+
 class RelationshipList(list, Generic[T]):
     """
-        Identical to `list[T]`, but its *type* signals
-        “this collection represents an ORM relationship”.
-        No behaviour is changed.
-        """
+    Identical to `list[T]`, but its *type* signals
+    “this collection represents an ORM relationship”.
+    No behaviour is changed.
+    """
     __slots__ = ()
+
 
 class BaseDataclass:
     """Mixin meant to be inherited *before* applying :pyfunc:`dataclasses.dataclass`.
@@ -57,6 +59,7 @@ class BaseDataclass:
     _pk: ClassVar[str] = "id"  # name of the primary‑key attribute
     __skip_type_validation__: ClassVar[bool] = False  # opt‑out flag for heavy imports
     _store: ClassVar = None
+
     # ------------------------------------------------------------------
     #  Primary‑key normalisation
     # ------------------------------------------------------------------
@@ -64,6 +67,11 @@ class BaseDataclass:
         if name == self._pk:
             value = uuid_str(value)
         super().__setattr__(name, value)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return getattr(self, "id", None) == getattr(other, "id", None)
 
     # ------------------------------------------------------------------
     #  Automatic post‑init validation
@@ -115,7 +123,7 @@ class BaseDataclass:
     #  Internal recursive type matcher
     # ------------------------------------------------------------------
     @classmethod
-    def _matches_type(cls, value: Any, expected: Any) -> bool:  # noqa: C901 – a bit complex but contained
+    def _matches_type(cls, value: Any, expected: Any) -> bool:
         """Return *True* if *value* conforms to *expected* annotation.
 
         Handles a pragmatic subset of typing constructs used in domain models.
@@ -141,12 +149,18 @@ class BaseDataclass:
             return all(cls._matches_type(v, elem_type) for v in value)
 
         # -------------------------------------------------- plain class or builtin
+        if expected is UUIDStr:
+            try:
+                UUIDStr(value)
+                return True
+            except Exception:
+                return False
+
         if isinstance(expected, type):
             return isinstance(value, expected)
 
         # -------------------------------------------------- fallback – assume OK
         return True
-
 
     @classmethod
     def _register_store(cls, store):

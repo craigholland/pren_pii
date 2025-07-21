@@ -1,41 +1,8 @@
 import pytest
 import json
-from uuid import uuid4, UUID
 from datetime import datetime
-from dataclasses import dataclass
-from typing import Optional, List, Dict
-
-from pii.common.abstracts.base_dataclass import BaseDataclass
 from pii.common.utils.dataclass_transformer import DataclassTransformer
-
-
-@dataclass
-class Inner(BaseDataclass):
-    id: UUID
-    name: str
-
-
-@dataclass
-class Outer(BaseDataclass):
-    id: UUID
-    timestamp: datetime
-    value: float
-    flag: Optional[bool]
-    inner: Inner
-    tags: List[str]
-    metadata: Dict[str, int]
-    nested_list: List[Inner]
-
-
-@pytest.fixture
-def sample_uuid():
-    return uuid4()
-
-
-@pytest.fixture
-def iso_time():
-    return datetime.now().isoformat()
-
+from pii.common.tests.conftest import Inner, Outer
 
 def test_import_from_dict(sample_uuid, iso_time):
     data = {
@@ -52,7 +19,7 @@ def test_import_from_dict(sample_uuid, iso_time):
     t.import_(data)
     dc = t.as_dataclass
 
-    assert dc.id == sample_uuid
+    assert dc.id == str(sample_uuid)
     assert isinstance(dc.timestamp, datetime)
     assert dc.value == 42.5
     assert dc.flag is True
