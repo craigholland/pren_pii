@@ -5,17 +5,18 @@ from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
+from pii.common.abstracts.base_dataclass import BaseDataclass
 from pii.common.utils.dataclass_transformer import DataclassTransformer
 
 
 @dataclass
-class Inner:
+class Inner(BaseDataclass):
     id: UUID
     name: str
 
 
 @dataclass
-class Outer:
+class Outer(BaseDataclass):
     id: UUID
     timestamp: datetime
     value: float
