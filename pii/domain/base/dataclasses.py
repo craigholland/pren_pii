@@ -8,7 +8,7 @@ from pii.common.utils.uuid_str import UUIDStr
 # Party & Inheritors
 # -----------------------------------------
 
-@dataclass
+@dataclass(eq=False)
 class Party(BaseDataclass):
     """Abstract root for both Person and Organization entities."""
     id: Optional[UUIDStr] = None
@@ -17,7 +17,7 @@ class Party(BaseDataclass):
     notes: Optional[str] = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Person(Party):
     """Represents an individual person. Inherits from Party."""
     type: str = "person"
@@ -28,7 +28,7 @@ class Person(Party):
     _marital_status_history: RelationshipList["MaritalStatusDC"] = field(default_factory=RelationshipList)
 
 
-@dataclass
+@dataclass(eq=False)
 class Organization(Party):
     """Represents an organization or legal entity. Inherits from Party."""
     type: str = "organization"
@@ -44,7 +44,7 @@ class Organization(Party):
 # Roles
 # -----------------------------------------
 
-@dataclass
+@dataclass(eq=False)
 class PartyRole(BaseDataclass):
     """Base class for roles tied to a Party entity."""
     id: Optional[UUIDStr] = None
@@ -53,19 +53,19 @@ class PartyRole(BaseDataclass):
     party_id: Optional[UUIDStr] = None
 
 
-@dataclass
+@dataclass(eq=False)
 class PersonRole(PartyRole):
     """Role associated with a Person (e.g., Employee, Doctor)."""
     pass
 
 
-@dataclass
+@dataclass(eq=False)
 class OrganizationRole(PartyRole):
     """Role associated with an Organization (e.g., Hospital, Vendor)."""
     pass
 
 
-@dataclass
+@dataclass(eq=False)
 class SystemRole(PartyRole):
     """Globally defined roles used for RBAC (e.g., Admin, System)."""
     pass

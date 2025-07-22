@@ -71,8 +71,10 @@ class BaseDataclass:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
-        return getattr(self, "id", None) == getattr(other, "id", None)
+        return getattr(self, self.get_pk(), None) == getattr(other, self.get_pk(), None)
 
+    def __hash__(self):
+        return hash(getattr(self, self.get_pk(), None))
     # ------------------------------------------------------------------
     #  Automatic post‑init validation
     # ------------------------------------------------------------------
@@ -111,14 +113,16 @@ class BaseDataclass:
                         f"`RelationshipList[{elem_type.__name__}]` for dataclass relationships."
                     )
 
-            # 2️⃣ If someone annotated `RelationshipList[str]` (primitive) instead of `list[str]`
+            # 2️⃣ RelationshipList[T] must only be used for dataclass relationships.
+            #     Only enforce if elem_type is a real Python type (skip forward‐refs/strings).
             if origin is RelationshipList:
                 (elem_type,) = get_args(expected) or (Any,)
-                if not (isinstance(elem_type, type) and issubclass(elem_type, BaseDataclass)):
+                if isinstance(elem_type, type) and not issubclass(elem_type, BaseDataclass):
                     raise TypeError(
                         f"{self.__class__.__name__}.{f.name}: "
-                        f"Annotated as `RelationshipList[{elem_type}]` but `{elem_type}` "
-                        f"is not a BaseDataclass—use plain `list[{elem_type.__name__}]` instead."
+                        f"Annotated as `RelationshipList[{elem_type.__name__}]` "
+                        f"but `{elem_type.__name__}` is not a BaseDataclass—"
+                        f"use plain `list[{elem_type.__name__}]` instead."
                     )
 
             if not self._matches_type(value, expected):
