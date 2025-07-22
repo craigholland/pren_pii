@@ -5,6 +5,6 @@ from pii.domain.base.dataclasses import (
 
 class OrganizationStore_NoDB(BaseStore_NoDB):
     """
-    In-memory store for Food entities.
+    In-memory store for Organization entities.
     """
     _dc_model = Organization

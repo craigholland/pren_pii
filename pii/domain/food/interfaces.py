@@ -1,5 +1,6 @@
 # prenuvo_pii/domain/food/interface.py
-
+# THIS IS LEGACY CODE.  It is only remaining to serve as example.
+# DO NOT USE THIS CODE.  IGNORE IT DURING ANY ANALYSIS
 from pii.domain.food.profiles import FoodProfile
 
 class FoodInterface:

@@ -5,6 +5,6 @@ from pii.domain.base.dataclasses import (
 
 class PersonStore_NoDB(BaseStore_NoDB):
     """
-    In-memory store for Food entities.
+    In-memory store for Person entities.
     """
     _dc_model = Person

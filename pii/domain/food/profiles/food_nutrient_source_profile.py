@@ -1,3 +1,5 @@
+# THIS IS LEGACY CODE.  It is only remaining to serve as example.
+# DO NOT USE THIS CODE.  IGNORE IT DURING ANY ANALYSIS
 from typing import Optional, Union
 
 from pii.common.abstracts.base_profile import BaseProfile

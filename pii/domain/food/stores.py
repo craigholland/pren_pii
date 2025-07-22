@@ -1,3 +1,5 @@
+# THIS IS LEGACY CODE.  It is only remaining to serve as example.
+# DO NOT USE THIS CODE.  IGNORE IT DURING ANY ANALYSIS
 from pii.common.abstracts.base_store_nodb import BaseStore_NoDB
 from pii.domain.food.dataclasses import (
     Ingredient,

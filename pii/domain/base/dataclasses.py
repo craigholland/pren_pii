@@ -3,7 +3,11 @@ from typing import Optional
 
 from pii.common.abstracts.base_dataclass import BaseDataclass, RelationshipList
 from pii.common.utils.uuid_str import UUIDStr
-
+from pii.domain.base.history import (
+    PersonName,
+    PersonGender,
+    MaritalStatus
+)
 # -----------------------------------------
 # Party & Inheritors
 # -----------------------------------------
@@ -22,10 +26,10 @@ class Person(Party):
     """Represents an individual person. Inherits from Party."""
     type: str = "person"
     date_of_birth: Optional[str] = None  # ISO8601-formatted date string
-    staff_organizations: RelationshipList["OrganizationStaffAssociationDC"] = field(default_factory=RelationshipList)
-    _names_history: RelationshipList["PersonNameDC"] = field(default_factory=RelationshipList)
-    _gender_history: RelationshipList["PersonGenderDC"] = field(default_factory=RelationshipList)
-    _marital_status_history: RelationshipList["MaritalStatusDC"] = field(default_factory=RelationshipList)
+    staff_organizations: RelationshipList["Organization"] = field(default_factory=RelationshipList)
+    _names_history: RelationshipList[PersonName] = field(default_factory=RelationshipList)
+    _gender_history: RelationshipList[PersonGender] = field(default_factory=RelationshipList)
+    _marital_status_history: RelationshipList[MaritalStatus] = field(default_factory=RelationshipList)
 
 
 @dataclass(eq=False)
@@ -35,9 +39,9 @@ class Organization(Party):
     legal_name: str = ""
     registration_number: Optional[str] = None
     org_type: Optional[str] = None
-    parent_links: RelationshipList["OrganizationToParentOrganizationDC"] = field(default_factory=RelationshipList)
-    children_links: RelationshipList["OrganizationToParentOrganizationDC"] = field(default_factory=RelationshipList)
-    staff_members: RelationshipList["OrganizationStaffAssociationDC"] = field(default_factory=RelationshipList)
+    parent_links: RelationshipList["Organization"] = field(default_factory=RelationshipList)
+    children_links: RelationshipList["Organization"] = field(default_factory=RelationshipList)
+    staff_members: RelationshipList[Person] = field(default_factory=RelationshipList)
 
 
 # -----------------------------------------

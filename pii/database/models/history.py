@@ -9,6 +9,11 @@ from typing import List
 from pii.database.models.core.main import db
 from pii.database.models.core.service_object import ServiceObject, ServiceObjectDC
 from pii.domain.enums import PersonNameType, GenderType, MaritalStatusType
+from pii.domain.base.history import (
+    PersonName as PersonNameDC,
+    PersonGender as PersonGenderDC,
+    MaritalStatus as MaritalStatusDC
+)
 from dataclasses import MISSING
 
 
@@ -43,25 +48,25 @@ class History(ServiceObject, db.Model):
         return None
 
 
-class PersonName(History):
+class PersonName(History, ServiceObjectDC):
     __tablename__ = "person_name"
-
+    __dataclass__ = PersonNameDC
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     name_type: Mapped[PersonNameType] = mapped_column(SQLEnum(PersonNameType), nullable=False)
     person_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("person.id"), nullable=False)
     person: Mapped["Person"] = relationship("Person", back_populates="names")
 
-class PersonGender(History):
+class PersonGender(History, ServiceObjectDC):
     __tablename__ = "person_gender"
-
+    __dataclass__ = PersonGenderDC
     gender: Mapped[GenderType] = mapped_column(SQLEnum(GenderType), nullable=False)
     person_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("person.id"), nullable=False)
     person: Mapped["Person"] = relationship("Person", back_populates="genders")
 
 
-class MaritalStatus(History):
+class MaritalStatus(History, ServiceObjectDC):
     __tablename__ = "marital_status"
-
+    __dataclass__ = MaritalStatusDC
     status: Mapped[MaritalStatusType] = mapped_column(SQLEnum(MaritalStatusType), nullable=False)
     person_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("person.id"), nullable=False)
     person: Mapped["Person"] = relationship("Person", foreign_keys=[person_id])
