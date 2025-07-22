@@ -165,3 +165,7 @@ class BaseDataclass:
     @classmethod
     def _register_store(cls, store):
         cls._store = store
+
+    @classmethod
+    def get_pk(cls):
+        return cls._pk

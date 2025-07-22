@@ -2,6 +2,7 @@ from typing import List, Optional, Any, TypeVar
 from abc import ABC, abstractmethod
 from dataclasses import is_dataclass, fields
 from pii.common.utils.dataclass_transformer import DataclassTransformer
+from pii.common.abstracts.base_dataclass import BaseDataclass
 from pii.common.utils.classproperty import classproperty
 
 T = TypeVar("T")
@@ -27,11 +28,16 @@ class BaseStore(ABC):
         VALUEERROR_MULTI_MATCH = "Multiple records match criteria {0}"
 
     def __init__(self, dc_model=None):
+        dc_model = dc_model or self._dc_model
         if dc_model:
             if dc := DataclassTransformer.get_dataclass(dc_model):
-                self._dc_model = dc
-            else:
-                raise ValueError(f"Store `dc_model` must be a dataclass; got {dc_model}")
+                if issubclass(dc, BaseDataclass):
+                    self._dc_model = dc
+                    return
+        else:
+            raise TypeError("`dc_model` must be a `BaseDataclass` instance")
+
+        raise TypeError(f"Store `dc_model` must be a dataclass; got {dc}")
 
     def __init_subclass__(cls, **kwargs):
         if not cls._is_abstract:
@@ -55,6 +61,14 @@ class BaseStore(ABC):
     def dc_model(self) -> Any:
         """Return the dataclass-model class associated with this store."""
         return self._dc_model
+
+    @classproperty
+    def pk_field(cls) -> str:
+        """
+        The name of the primary-key field on the associated dataclass model.
+        Mirrors BaseDataclass._pk via its get_pk() method.
+        """
+        return cls._dc_model.get_pk()
 
     @abstractmethod
     def get(self, pk: str) -> Any:
@@ -92,7 +106,7 @@ class BaseStore(ABC):
             raise AttributeError("Cannot create record – `_dc_model` not set on store")
 
         # Strip pk if provided
-        setattr(dc, dc._pk, None)
+        setattr(dc, dc.get_pk(), None)
           # type: ignore[arg-type, call-arg]
         return self.put(dc)
 

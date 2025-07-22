@@ -119,8 +119,7 @@ class BaseStore_NoDB(BaseStore):
         if pk in self._store[self._cls_name]:
             del self._store[self._cls_name][pk]
             return True
-        else:
-            raise ValueError(self.Error.VALUEERROR_PRIMARYKEY_NOTFOUND.format(pk))
+        return False
 
     def get_by_remote_id(self, remote_id: Any, pk: str = "remote_id") -> Optional[T]:
         for obj in self._store.values():
