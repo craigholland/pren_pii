@@ -42,11 +42,11 @@ class BaseStore_NoDB(BaseStore):
 
     def _insert(self, obj: Any) -> Any:
         obj = self._validate_object(obj)
-        pk = getattr(obj, self.dc_model._pk, None)
-        if not pk:
-            pk = str(uuid4())
-            setattr(obj, self.dc_model._pk, pk)
-        self._store[self._cls_name][pk] = obj
+        pk_value = getattr(obj, self.dc_model.get_pk(), None)
+        if not pk_value:
+            pk_value = str(uuid4())
+            setattr(obj, self.dc_model.get_pk(), pk_value)
+        self._store[self._cls_name][pk_value] = obj
         return obj
 
     def _patch(self, obj):
@@ -55,9 +55,9 @@ class BaseStore_NoDB(BaseStore):
         Preserves any fields not included in the patch data.
         """
         if is_dataclass(obj):
-            obj_id = getattr(obj, "id", None)
+            obj_id = getattr(obj, self.pk_field, None)
         else:
-            obj_id = obj.get("id")
+            obj_id = obj.get(self.pk_field, None)
 
         if obj_id is None:
             raise ValueError("Cannot patch without an ID")
@@ -97,9 +97,9 @@ class BaseStore_NoDB(BaseStore):
 
     def _update(self, obj: Any) -> Any:
         obj = self._validate_object(obj)
-        pk = getattr(obj, self._pk, None)
+        pk = getattr(obj, self.pk_field, None)
         if not pk:
-            raise ValueError(self.Error.VALUEERROR_PRIMARYKEY.format(self._pk))
+            raise ValueError(self.Error.VALUEERROR_PRIMARYKEY.format(self.pk_field))
 
         self._store[self._cls_name][pk] = obj
         return obj
@@ -107,11 +107,11 @@ class BaseStore_NoDB(BaseStore):
     def patch(self, obj: Any) -> Any:
         return self._patch(obj)
 
-    def scan(self) -> List[Any]:
+    def all(self) -> List[Any]:
         return list(self._store[self._cls_name].values())
 
     def filter(self, **kwargs) -> List[Any]:
-        if records := self.scan():
+        if records := self.all():
             return RecordFilter(records).filter(**kwargs).results
         return []
 
@@ -121,8 +121,3 @@ class BaseStore_NoDB(BaseStore):
             return True
         return False
 
-    def get_by_remote_id(self, remote_id: Any, pk: str = "remote_id") -> Optional[T]:
-        for obj in self._store.values():
-            if hasattr(obj, pk) and getattr(obj, pk) == remote_id:
-                return obj
-        return None

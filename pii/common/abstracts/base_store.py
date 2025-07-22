@@ -157,7 +157,7 @@ class BaseStore(ABC):
         pass
 
     @abstractmethod
-    def scan(self) -> List[Any]:
+    def all(self) -> List[Any]:
         """Retrieve all objects from the store."""
         pass
 

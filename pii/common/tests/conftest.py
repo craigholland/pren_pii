@@ -26,7 +26,7 @@ class Outer(BaseDataclass):
     value: float
     flag: Optional[bool]
     inner: Inner
-    tags: RelationshipList[str]
+    tags: List[str]
     metadata: Dict[str, int]
     nested_list: RelationshipList[Inner]
 
@@ -61,7 +61,7 @@ def outer_instance(sample_uuid, inner_instance):
         value=42.0,
         flag=True,
         inner=inner_instance,
-        tags=["tag1", "tag2"],
+        tags=['tag1', 'tag2'],
         metadata={"a": 1, "b": 2},
         nested_list=[inner_instance]
     )

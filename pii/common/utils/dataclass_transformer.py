@@ -1,12 +1,45 @@
 import json
 import dataclasses
 from dataclasses import is_dataclass, fields
-from typing import Any, Type, get_origin, get_args, Union, TypeVar
+from typing import Any, Type, TypeVar, get_origin, get_args, Union, Optional, Dict
 from uuid import UUID
 from datetime import datetime
 
+from pii.common.abstracts.base_dataclass import RelationshipList  # ← new import
+
 T = TypeVar("T")
+
+
 class DataclassTransformer:
+    """
+    Transforms between dataclass instances, dicts, and JSON strings.
+
+    Usage:
+        transformer = DataclassTransformer(MyDataclass)
+        transformer.import_(data_dict)      # dict → dataclass
+        transformer.import_(json_str)       # JSON → dataclass
+        instance = transformer.as_dataclass # get dataclass
+        as_dict  = transformer.as_dict      # dataclass → dict
+        as_json  = transformer.as_json      # dataclass → JSON
+    """
+
+    _COERCIONS = {
+        (UUID, str): UUID,
+        (datetime, str): datetime.fromisoformat,
+        (float, (int, str)): float,
+        (int, str): int,
+    }
+
+    def __init__(self, dc_or_instance: Union[Type[T], T]):
+        if is_dataclass(dc_or_instance):
+            if isinstance(dc_or_instance, type):
+                self._dataclass: Type[T] = dc_or_instance
+                self._data: Optional[T] = None
+            else:
+                self._dataclass = type(dc_or_instance)
+                self._data = dc_or_instance
+        else:
+            raise TypeError("Expected a dataclass class or instance.")
 
     @staticmethod
     def get_dataclass(obj: Any) -> Union[T, None]:
@@ -29,133 +62,145 @@ class DataclassTransformer:
 
         # Not a dataclass
         return None
-    def __init__(self, dc_or_instance: Any):
-        if is_dataclass(dc_or_instance):
-            if isinstance(dc_or_instance, type):
-                self._dataclass = dc_or_instance
-                self._data = None
-            else:
-                self._dataclass = type(dc_or_instance)
-                self._data = dc_or_instance
-        else:
-            raise TypeError("Expected a dataclass or a dataclass instance.")
 
-    def import_(self, obj: Any):
-        if isinstance(obj, dict):
-            self._import_dict(obj)
-        elif is_dataclass(obj):
-            self._import_dataclass(obj)
-        elif isinstance(obj, str):
-            self._import_json(obj)
-        else:
-            raise TypeError(f"Unsupported input type: {type(obj)}")
+    def import_(self, src: Union[Dict[str, Any], str, T]) -> "DataclassTransformer":
+        # JSON → dict
+        if isinstance(src, str):
+            try:
+                src = json.loads(src)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON: {e}")
+        # dataclass instance → dict
+        if is_dataclass(src) and not isinstance(src, dict):
+            src = dataclasses.asdict(src)
 
-    def _import_dict(self, input_dict: dict):
+        if not isinstance(src, dict):
+            raise TypeError(f"Cannot import from type {type(src).__name__}")
+
+        # build or patch
         if self._data is None:
-            self._data = self._build(self._dataclass, input_dict)
+            self._data = self._build(self._dataclass, src)
         else:
-            self._patch(self._data, input_dict)
+            self._patch(self._data, src)
 
-    def _import_json(self, input_json: str):
-        parsed = json.loads(input_json)
-        if not isinstance(parsed, dict):
-            raise ValueError("Parsed JSON must be a dictionary.")
-        self._import_dict(parsed)
-
-    def _import_dataclass(self, instance: Any):
-        if self._data is None:
-            self._data = instance
-        else:
-            self._patch(self._data, dataclasses.asdict(instance))
+        return self
 
     @property
-    def as_dataclass(self) -> Any:
-        return self._data
+    def as_dataclass(self) -> T:
+        return self._data  # type: ignore
 
     @property
-    def as_dict(self) -> dict:
-        return dataclasses.asdict(self._data) if self._data else {}
+    def as_dict(self) -> Dict[str, Any]:
+        return dataclasses.asdict(self._data) if self._data is not None else {}
 
     @property
     def as_json(self) -> str:
-        def default(obj):
-            if isinstance(obj, (UUID, datetime)):
-                return str(obj)
-            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-
+        def default(o: Any) -> str:
+            if isinstance(o, (UUID, datetime)):
+                return str(o)
+            raise TypeError(f"{type(o).__name__} is not JSON serializable")
         return json.dumps(self.as_dict, default=default)
 
-    def _build(self, dc_cls: Type, data: dict):
-        kwargs = {}
-        for f in fields(dc_cls):
-            if f.name not in data:
-                continue
-            val = data[f.name]
-            rel_fields_dct = dc_cls.relationship_fields()
-            if f.name in rel_fields_dct and isinstance(val, (list, tuple)):
-                rel_list = []
-                for v in val:
-                    child_store = rel_fields_dct[f.name]._store()
-                    child = child_store.get_or_create(**v)
-                    rel_list.append(child)
-                kwargs[f.name] = rel_list
-            else:
+    def _build(self, cls: Type[T], data: Dict[str, Any]) -> T:
+        kwargs: Dict[str, Any] = {}
+        for f in fields(cls):
+            if f.name in data:
+                val = data[f.name]
                 kwargs[f.name] = self._coerce_field(f.type, val)
-        return dc_cls(**kwargs)
+        return cls(**kwargs)  # type: ignore
 
-    def _patch(self, instance: Any, patch_data: dict):
+    def _patch(self, instance: T, patch: Dict[str, Any]) -> None:
+        """
+        Patch an existing dataclass instance with new values.
+
+        - For primitive or simple container fields, we coerce & setattr.
+        - For nested dataclass fields, we delegate to a sub-transformer.
+        - For RelationshipList[T], we iterate incoming list; if element T
+          already exists at same index, patch it, else build a new T.
+        """
+        from pii.common.abstracts.base_dataclass import RelationshipList
+
         for f in fields(instance):
-            if f.name not in patch_data:
+            if f.name not in patch:
                 continue
-            new_val = patch_data[f.name]
-            current_val = getattr(instance, f.name)
 
-            # Recursive patch if current value is a dataclass and new_val is a dict
-            if is_dataclass(current_val) and isinstance(new_val, dict):
-                self._patch(current_val, new_val)
-            else:
-                coerced = self._coerce_field(f.type, new_val)
-                setattr(instance, f.name, coerced)
+            new_val = patch[f.name]
+            field_type = f.type
+            origin = get_origin(field_type)
+
+            # 1) Nested dataclass: Dict → patch existing dataclass
+            if is_dataclass(field_type) and isinstance(new_val, dict):
+                current = getattr(instance, f.name)
+                # Patch in place
+                patched = DataclassTransformer(current).import_(new_val).as_dataclass
+                setattr(instance, f.name, patched)
+                continue
+
+            # 2) RelationshipList[T]: list of nested dataclasses
+            if origin is RelationshipList and isinstance(new_val, list):
+                elem_type = get_args(field_type)[0]
+                current_list = getattr(instance, f.name) or RelationshipList()
+                updated_list = RelationshipList()
+                for idx, elem_data in enumerate(new_val):
+                    # If existing dataclass at same index, patch it
+                    if idx < len(current_list) and is_dataclass(elem_type):
+                        transformer = DataclassTransformer(current_list[idx])
+                        transformer.import_(elem_data)
+                        updated_list.append(transformer.as_dataclass)
+                    else:
+                        # Build a fresh one
+                        built = DataclassTransformer(elem_type).import_(elem_data).as_dataclass
+                        updated_list.append(built)
+                setattr(instance, f.name, updated_list)
+                continue
+
+            # 3) Fallback for everything else
+            coerced = self._coerce_field(field_type, new_val)
+            setattr(instance, f.name, coerced)
 
     def _coerce_field(self, ftype: Type, value: Any) -> Any:
         origin = get_origin(ftype)
         args = get_args(ftype)
-        if is_dataclass(ftype):
-            if isinstance(value, ftype):
-                return value
-            elif isinstance(value, dict):
-                return self._build(ftype, value)
 
-        # Handle Optional[T]
+        # Handle RelationshipList[T] first
+        if origin is RelationshipList:
+            elem_type = args[0]
+            # Build nested dataclasses or simple coercion for each element
+            return [
+                self._coerce_field(elem_type, v)
+                for v in value
+            ]
+
+        # Optional[T]
         if origin is Union and type(None) in args:
-            non_none = [a for a in args if a is not type(None)][0]
+            non_none = next(a for a in args if a is not type(None))
             return None if value is None else self._coerce_field(non_none, value)
 
-        # Handle List[T]
+        # List[T]
         if origin is list and args:
-            inner = args[0]
-            return [self._coerce_field(inner, v) for v in value]
+            return [
+                self._coerce_field(args[0], v)
+                for v in value
+            ]
 
-        # Handle Dict[K, V]
+        # Dict[K, V]
         if origin is dict and len(args) == 2:
-            k_type, v_type = args
             return {
-                self._coerce_field(k_type, k): self._coerce_field(v_type, v)
+                self._coerce_field(args[0], k): self._coerce_field(args[1], v)
                 for k, v in value.items()
             }
 
-        # Handle nested dataclass
-        if is_dataclass(ftype) and isinstance(value, dict):
-            return self._build(ftype, value)
+        # Nested dataclass
+        if is_dataclass(ftype):
+            if isinstance(value, ftype):
+                return value
+            if isinstance(value, dict):
+                return DataclassTransformer(ftype).import_(value).as_dataclass
 
-        # Simple coercion rules
-        if ftype == UUID and isinstance(value, str):
-            return UUID(value)
-        if ftype == datetime and isinstance(value, str):
-            return datetime.fromisoformat(value)
-        if ftype == float and isinstance(value, (int, str)):
-            return float(value)
-        if ftype == int and isinstance(value, str):
-            return int(value)
+        # Simple coercions
+        for (target, src_types), fn in self._COERCIONS.items():
+            if ftype is target and isinstance(value, src_types):
+                return fn(value)
 
+        # Fallback
         return value

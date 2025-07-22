@@ -93,13 +93,35 @@ class BaseDataclass:
           order to keep the implementation minimal.
         """
         for f in fields(self):
+            expected = f.type
             value = getattr(self, f.name)
+            origin = get_origin(expected)
 
             # Allow None regardless of annotation – covers Optional/Union
             if value is None:
                 continue
 
-            if not self._matches_type(value, f.type):
+            # 1️⃣ If someone annotated `list[SomeDC]` instead of `RelationshipList[SomeDC]`
+            if origin is list:
+                (elem_type,) = get_args(expected) or (Any,)
+                if isinstance(elem_type, type) and issubclass(elem_type, BaseDataclass):
+                    raise TypeError(
+                        f"{self.__class__.__name__}.{f.name}: "
+                        f"Annotated as `list[{elem_type.__name__}]` but must use "
+                        f"`RelationshipList[{elem_type.__name__}]` for dataclass relationships."
+                    )
+
+            # 2️⃣ If someone annotated `RelationshipList[str]` (primitive) instead of `list[str]`
+            if origin is RelationshipList:
+                (elem_type,) = get_args(expected) or (Any,)
+                if not (isinstance(elem_type, type) and issubclass(elem_type, BaseDataclass)):
+                    raise TypeError(
+                        f"{self.__class__.__name__}.{f.name}: "
+                        f"Annotated as `RelationshipList[{elem_type}]` but `{elem_type}` "
+                        f"is not a BaseDataclass—use plain `list[{elem_type.__name__}]` instead."
+                    )
+
+            if not self._matches_type(value, expected):
                 raise TypeError(
                     f"{self.__class__.__name__}.{f.name} = {value!r} does not match "
                     f"declared type {f.type}"
