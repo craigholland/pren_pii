@@ -116,3 +116,21 @@ def test_invalid_timestamp_type(sample_uuid):
             metadata={},
             nested_list=[]
         )
+
+def test_inner_serialization_roundtrip(sample_uuid):
+    """
+    Verify that SerializableMixin on BaseDataclass allows a simple
+    dataclass (Inner) to round‑trip through to_dict()/from_dict().
+    """
+    # 1) Construct an Inner instance
+    orig = Inner(id=sample_uuid, name="TestName")
+
+    # 2) Serialize to primitives
+    data = orig.to_dict()
+    assert isinstance(data, dict)
+    assert set(data.keys()) >= {"id", "name"}
+
+    # 3) Rehydrate and verify equality
+    clone = Inner.from_dict(data)
+    assert isinstance(clone, Inner)
+    assert clone == orig

@@ -55,13 +55,14 @@ class DateParser:
 
             # 3) dict for proto types
             if isinstance(date_input, dict):
-                # Distinguish Timestamp vs. Date/DateTime by keys
-                if {"seconds", "nanos"} <= date_input.keys():
-                    return DateParser._from_timestamp(Timestamp(**date_input))
+                # 3a) google.type.Date / DateTime dict
                 if {"year", "month", "day"} <= date_input.keys():
-                    if {"hours", "minutes"}.intersection(date_input):
+                    if {"hours", "minutes", "seconds", "nanos"}.intersection(date_input.keys()):
                         return DateParser._from_google_datetime(GoogleDateTime(**date_input))
                     return DateParser._from_google_date(GoogleDate(**date_input))
+                # 3b) protobuf Timestamp dict
+                if {"seconds", "nanos"} <= date_input.keys():
+                    return DateParser._from_timestamp(Timestamp(**date_input))
                 raise DateParseError(f"Unsupported dict keys for date: {sorted(date_input.keys())}")
 
             # 4) Protobuf Timestamp
@@ -103,7 +104,18 @@ class DateParser:
     @staticmethod
     def _from_google_datetime(gd: GoogleDateTime) -> datetime:
         """Convert google.type.DateTime to UTC-aware datetime."""
-        return gd.ToDatetime(tzinfo=ZoneInfo("UTC"))
+        # Manually construct datetime from individual fields
+        microsec = int(gd.nanos) // 1000
+        return datetime(
+            gd.year,
+            gd.month,
+            gd.day,
+            gd.hours,
+            gd.minutes,
+            gd.seconds,
+            microsec,
+            tzinfo=ZoneInfo("UTC"),
+        )
 
     @property
     def datetime(self) -> Optional[datetime]:

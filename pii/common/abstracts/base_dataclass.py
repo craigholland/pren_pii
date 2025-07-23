@@ -1,10 +1,13 @@
 from dataclasses import fields
 from types import UnionType
 from typing import (
-    Any, Generic, TypeVar, ClassVar, get_args, get_origin, Union
+    Any, TypeVar, ClassVar, get_args, get_origin, Union,
+    get_type_hints, ForwardRef
 )
 
 from pii.common.utils.uuid_str import uuid_str, UUIDStr
+from pii.common.abstracts.serializable import SerializableMixin
+from pii.common.abstracts.relationship_list import RelationshipList
 
 """Common base mix‑in for domain dataclasses.
 
@@ -22,7 +25,7 @@ Features
   for all :pyclass:`~prenuvo_pii.common.typing.relationship.RelationshipList`
   fields.
 
-Python 3.12 compliant – subclasses the plain ``list`` class rather than the
+Python 3.12 compliant – subclasses the plain ``list`` class rather than the
 ``list[T]`` generic alias.
 """
 
@@ -30,17 +33,7 @@ __all__ = ["BaseDataclass"]
 
 T = TypeVar("T")
 
-
-class RelationshipList(list, Generic[T]):
-    """
-    Identical to `list[T]`, but its *type* signals
-    “this collection represents an ORM relationship”.
-    No behaviour is changed.
-    """
-    __slots__ = ()
-
-
-class BaseDataclass:
+class BaseDataclass(SerializableMixin):
     """Mixin meant to be inherited *before* applying :pyfunc:`dataclasses.dataclass`.
 
     Example
@@ -135,16 +128,19 @@ class BaseDataclass:
     #  Class‑level relationship introspection (mirrors ORM helper)
     # ------------------------------------------------------------------
     @classmethod
-    def relationship_fields(cls):
-        """Return ``{ field_name: target_dataclass }`` for RelationshipList fields."""
-        rels: dict[str, type] = {}
-        for f in fields(cls):
-            origin = get_origin(f.type)
-            if origin is RelationshipList:
-                (elem_type,) = get_args(f.type) or (Any,)
-                rels[f.name] = elem_type
+    def relationship_fields(cls) -> dict[str, type | ForwardRef]:
+        """
+        Return a mapping of RelationshipList fields to their element type.
+        Supports forward-referenced annotation strings by using get_type_hints.
+        """
+        rels: dict[str, type | ForwardRef] = {}
+        # Resolve forward-refs in this class’s annotations
+        hints = get_type_hints(cls, include_extras=True)
+        for name, hint in hints.items():
+            if get_origin(hint) is RelationshipList:
+                (elem_type,) = get_args(hint) or (Any,)
+                rels[name] = elem_type
         return rels
-
     # ------------------------------------------------------------------
     #  Internal recursive type matcher
     # ------------------------------------------------------------------

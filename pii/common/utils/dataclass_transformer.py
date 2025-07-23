@@ -1,11 +1,14 @@
 import json
 import dataclasses
 from dataclasses import is_dataclass, fields
-from typing import Any, Type, TypeVar, get_origin, get_args, Union, Optional, Dict
+from typing import (
+    Any, Type, TypeVar, get_origin,
+    get_args, Union, Optional, Dict
+)
 from uuid import UUID
 from datetime import datetime
 
-from pii.common.abstracts.base_dataclass import RelationshipList  # ← new import
+from pii.common.abstracts.relationship_list import RelationshipList
 
 T = TypeVar("T")
 
@@ -62,6 +65,17 @@ class DataclassTransformer:
 
         # Not a dataclass
         return None
+
+    @staticmethod
+    def deep_merge(orig: dict, updates: dict) -> dict:
+        """Recursively merge updates into orig, returning a new dict."""
+        result = orig.copy()
+        for k, v in updates.items():
+            if isinstance(v, dict) and isinstance(result.get(k), dict):
+                result[k] = DataclassTransformer.deep_merge(result[k], v)
+            else:
+                result[k] = v
+        return result
 
     def import_(self, src: Union[Dict[str, Any], str, T]) -> "DataclassTransformer":
         # JSON → dict

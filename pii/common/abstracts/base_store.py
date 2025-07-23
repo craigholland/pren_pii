@@ -70,6 +70,26 @@ class BaseStore(ABC):
         """
         return cls._dc_model.get_pk()
 
+    @classmethod
+    def get_related(cls, parent_obj, fk_field: str = None):
+        """
+        Fetch all records in this store whose foreign-key equals the parent's PK.
+
+        :param parent_obj: A BaseDataclass instance whose PK we relate on.
+        :param fk_field:  Name of the field on the child dataclass that holds the FK.
+                          If omitted, defaults to the parent’s own PK field name.
+        :return: A list of child dataclass instances matching parent_obj.
+        """
+        # Determine which field on the child holds the FK
+        if fk_field is None:
+            fk_field = parent_obj.get_pk()
+
+        # Look up the parent’s PK value
+        parent_pk = getattr(parent_obj, fk_field)
+
+        # Delegate to the store’s filter method
+        return cls().filter(**{fk_field: parent_pk})
+
     @abstractmethod
     def get(self, pk: str) -> Any:
         """Retrieve an object by its primary key."""
