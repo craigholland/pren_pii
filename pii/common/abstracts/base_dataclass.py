@@ -1,13 +1,16 @@
-from dataclasses import fields
+from dataclasses import fields, Field
 from types import UnionType
 from typing import (
     Any, TypeVar, ClassVar, get_args, get_origin, Union,
-    get_type_hints, ForwardRef
+    get_type_hints, ForwardRef, Optional
 )
+from datetime import date
 
 from pii.common.utils.uuid_str import uuid_str, UUIDStr
 from pii.common.abstracts.serializable import SerializableMixin
 from pii.common.abstracts.relationship_list import RelationshipList
+from pii.common.utils.dateparser import DateParser
+
 
 """Common base mix‑in for domain dataclasses.
 
@@ -75,6 +78,20 @@ class BaseDataclass(SerializableMixin):
         if not getattr(self, "__skip_type_validation__", False):
             self.validate_types()
 
+    def _validate_date(self, field: Field):
+        ftype = field.type
+        is_date_field = (
+            ftype is date or
+            (get_origin(ftype) is Optional and get_args(ftype)[0] is date)
+        )
+
+        if is_date_field:
+            if val := getattr(self, field.name, None):
+                if isinstance(val, str):
+                    parsed = DateParser(val)
+                    object.__setattr__(self, field.name, parsed)
+                    return True
+        return False
     # ------------------------------------------------------------------
     #  Public helpers
     # ------------------------------------------------------------------
@@ -94,6 +111,9 @@ class BaseDataclass(SerializableMixin):
 
             # Allow None regardless of annotation – covers Optional/Union
             if value is None:
+                continue
+
+            if self._validate_date(f):
                 continue
 
             # 1️⃣ If someone annotated `list[SomeDC]` instead of `RelationshipList[SomeDC]`

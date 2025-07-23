@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
-
+from datetime import date
 from pii.common.abstracts.base_dataclass import BaseDataclass, RelationshipList
 from pii.common.utils.uuid_str import UUIDStr
 from pii.domain.base.history import (
@@ -25,7 +25,7 @@ class Party(BaseDataclass):
 class Person(Party):
     """Represents an individual person. Inherits from Party."""
     type: str = "person"
-    date_of_birth: Optional[str] = None  # ISO8601-formatted date string
+    date_of_birth: Optional[date] = None
     staff_organizations: RelationshipList["Organization"] = field(default_factory=RelationshipList)
     _names_history: RelationshipList[PersonName] = field(default_factory=RelationshipList)
     _gender_history: RelationshipList[PersonGender] = field(default_factory=RelationshipList)
