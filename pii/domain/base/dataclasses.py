@@ -52,21 +52,22 @@ class Organization(Party):
 class PartyRole(BaseDataclass):
     """Base class for roles tied to a Party entity."""
     id: Optional[UUIDStr] = None
-    name: str = ""
-    description: Optional[str] = None
+    type: str = ""
     party_id: Optional[UUIDStr] = None
 
 
 @dataclass(eq=False)
 class PersonRole(PartyRole):
     """Role associated with a Person (e.g., Employee, Doctor)."""
-    pass
+    is_staff_role: bool = False
+    organization_roles: RelationshipList["OrganizationRole"] = field(default_factory=RelationshipList)
+
 
 
 @dataclass(eq=False)
 class OrganizationRole(PartyRole):
     """Role associated with an Organization (e.g., Hospital, Vendor)."""
-    pass
+    person_roles: RelationshipList["PersonRole"] = field(default_factory=RelationshipList)
 
 
 @dataclass(eq=False)

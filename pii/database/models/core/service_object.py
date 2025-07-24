@@ -13,7 +13,7 @@ from sqlalchemy.ext.associationproxy import AssociationProxy
 T = TypeVar("T")
 Session = db.Session
 
-class ServiceObject(Base):
+class ServiceObject(object):
     """
     Base mixin for *all* ORM models.  Provides id, timestamp, and metadata columns.
     Association tables and any model that does *not* map to a domain dataclass
@@ -21,6 +21,7 @@ class ServiceObject(Base):
     """
     __abstract__ = True
     __allow_unmapped__ = True
+    metadata = db.Model.metadata
 
     def __setattr__(self, name, value):
         if name == "id":

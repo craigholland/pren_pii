@@ -54,7 +54,7 @@ class BaseStoreSQLAlchemy(BaseStore):
             except NoResultFound:
                 return None
 
-    def scan(self) -> List[T]:
+    def all(self) -> List[T]:
         with self._Session() as session:
             results = session.query(self.orm_model).order_by(self.orm_model.date_created.asc()).all()
             return [self.to_dataclass(obj) for obj in results]

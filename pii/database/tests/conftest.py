@@ -2,7 +2,7 @@ import pytest
 from testcontainers.postgres import PostgresContainer
 from sqlalchemy import create_engine, text
 from pii.database.models.core.main import Base, db
-
+from pii.database.models.core.service_object import ServiceObject
 
 @pytest.fixture(scope="session")
 def engine():
@@ -15,6 +15,7 @@ def engine():
             conn.execute(text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'))
 
         Base.metadata.create_all(engine)
+        ServiceObject.metadata.create_all(engine)
         db.engine = engine
 
         yield engine

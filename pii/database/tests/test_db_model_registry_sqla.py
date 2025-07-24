@@ -37,7 +37,7 @@ def test_get_store_for_dataclass_class(dc, orm):
     # we get back an instance of the right Store class
     assert isinstance(store, store_cls)
     # and that store still points at the correct ORM model
-    assert getattr(store, "_model") is orm
+    assert getattr(store, "_orm_model") is orm
 
 
 @pytest.mark.parametrize("orm,dc", list(ServiceObjectDC._orm_to_dc_registry.items()))
@@ -46,7 +46,7 @@ def test_get_store_for_orm_model_class(orm, dc):
     store_cls = BaseStoreSQLAlchemy._model_to_store_registry[orm]
 
     assert isinstance(store, store_cls)
-    assert getattr(store, "_model") is orm
+    assert getattr(store, "_orm_model") is orm
 
 
 def test_get_store_for_bad_inputs():

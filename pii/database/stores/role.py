@@ -1,12 +1,20 @@
 from pii.database.store_adapters.sqlalchemy_store import BaseStoreSQLAlchemy
 from typing import TypeVar
 
-from pii.database.models.roles import OrganizationRole, SystemRole, PersonRole
+from pii.database.models.roles import PartyRole, OrganizationRole, SystemRole, PersonRole
 
 
 T = TypeVar('T')
+class PartyRoleStore(BaseStoreSQLAlchemy):
+    """
+    DB-based store for PartyRole entities.
+    """
+    _orm_model = PartyRole
+    def __init__(self):
+        super().__init__()
 
-class PersonRoleStore_NoDB(BaseStoreSQLAlchemy):
+
+class PersonRoleStore(BaseStoreSQLAlchemy):
     """
     DB-based store for PersonRole entities.
     """
@@ -15,13 +23,13 @@ class PersonRoleStore_NoDB(BaseStoreSQLAlchemy):
         super().__init__()
 
 
-class OrganizationRoleStore_NoDB(BaseStoreSQLAlchemy):
+class OrganizationRoleStore(BaseStoreSQLAlchemy):
     """
     DB-based store for OrgRole entities.
     """
     _orm_model = OrganizationRole
 
-class SystemRoleStore_NoDB(BaseStoreSQLAlchemy):
+class SystemRoleStore(BaseStoreSQLAlchemy):
     """
     DB-based store for SystemRole entities.
     """

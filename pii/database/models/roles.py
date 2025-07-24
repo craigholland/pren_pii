@@ -1,30 +1,39 @@
 """
-Role hierarchy for Party entities.
-
-A Party (Person or Organization) may have multiple PartyRole records.
-Roles are polymorphic and support extension by subclassing.
-
-Abstract roles (PartyRole, PersonRole, OrganizationRole) do not map to domain dataclasses.
-Concrete roles (e.g., SystemRole) must subclass from these and inherit ServiceObjectDC.
+Regenerated role models using a standalone Table for M:M associations
+and proper association_proxy for many-to-many semantics.
 """
-
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy import String, Boolean, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    String,
+    Boolean,
+    ForeignKey,
+    UniqueConstraint,
+    Table,
+    Column
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.dialects.postgresql import UUID
 from pii.database.models.core.main import db
 from pii.database.models.core.service_object import ServiceObject, ServiceObjectDC
 
-from pii.domain.base.dataclasses import SystemRole as SystemRoleDC
+from pii.domain.base.dataclasses import (
+    SystemRole as SystemRoleDC,
+    PartyRole as PartyRoleDC,
+    PersonRole as PersonRoleDC,
+    OrganizationRole as OrganizationRoleDC,
+)
 
+if TYPE_CHECKING:
+    from pii.database.models.roles import PersonRole, OrganizationRole
 
 # ---------------------------------------------------------------------------
 # PartyRole (abstract base)
 # ---------------------------------------------------------------------------
-
-class PartyRole(ServiceObject, db.Model):
+class PartyRole(ServiceObjectDC, db.Model):
     __tablename__ = "party_role"
+    __dataclass__ = PartyRoleDC
 
     # Polymorphic discriminator
     type: Mapped[str] = mapped_column(String(100), index=True)
@@ -46,11 +55,6 @@ class PartyRole(ServiceObject, db.Model):
         Boolean, nullable=False, default=False, index=True
     )
 
-    # Contact mechanisms that hang off a role (optional; table TBD)
-    # contact_mechanisms = relationship(
-    #     "ContactMechanism", back_populates="party_role"
-    # )
-
     @declared_attr
     def __mapper_args__(cls):
         if cls.__name__ == "PartyRole":
@@ -67,115 +71,28 @@ class PartyRole(ServiceObject, db.Model):
     def is_active(self) -> bool:
         return not self.terminated
 
-
+# ---------------------------------------------------------------------------
+# Standalone association table for PersonRole <-> OrganizationRole (M:M)
+# Defined after PartyRole to ensure party_role table exists
+# ---------------------------------------------------------------------------
+person_role_to_organization_role = Table(
+    "person_role_to_organization_role",
+    ServiceObject.metadata,
+    Column(
+        "person_role_id", UUID,
+        ForeignKey("party_role.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "organization_role_id", UUID,
+        ForeignKey("party_role.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+)
 
 # ---------------------------------------------------------------------------
-# OrganizationRole (abstract subclass)
+# OrganizationManagedPersonAssociation (1:M)
 # ---------------------------------------------------------------------------
-
-class OrganizationRole(PartyRole):
-    __mapper_args__ = {
-        "polymorphic_identity": "organization_role",
-    }
-
-    person_roles = relationship(
-        "PersonRole",
-        secondary="person_role_to_organization_role",
-        primaryjoin="OrganizationRole.id == person_role_to_organization_role.c.organization_role_id",
-        secondaryjoin="PersonRole.id == person_role_to_organization_role.c.person_role_id",
-        lazy="selectin",
-    )
-
-    managed_person_roles = relationship(
-        "OrganizationManagedPersonAssociation",
-        back_populates="organization_role",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    organization_owner_associations = relationship(
-        "OrganizationOwnerAssociation",
-        back_populates="organization_role",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-
-# ---------------------------------------------------------------------------
-# PersonRole (abstract subclass)
-# ---------------------------------------------------------------------------
-
-class PersonRole(PartyRole):
-    is_staff_role: bool = False  # May be toggled in concrete subclasses
-
-    __mapper_args__ = {
-        "polymorphic_identity": "person_role",
-    }
-
-    organization_roles = relationship(
-        "OrganizationRole",
-        secondary="person_role_to_organization_role",
-        primaryjoin="PersonRole.id == person_role_to_organization_role.c.person_role_id",
-        secondaryjoin="OrganizationRole.id == person_role_to_organization_role.c.organization_role_id",
-        lazy="selectin",
-    )
-
-    organization_owner_associations = relationship(
-        "OrganizationOwnerAssociation",
-        back_populates="person_role",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    organization_managed_person_associations = relationship(
-        "OrganizationManagedPersonAssociation",
-        back_populates="person_role",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    organizations_assigned_to = relationship(
-        "OrganizationStaffAssociation",
-        back_populates="staff_member",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    def is_primary_role(self) -> bool:
-        return False
-
-    def can_own_organizations(self) -> bool:
-        return False
-
-
-# ---------------------------------------------------------------------------
-# Concrete Role Example
-# ---------------------------------------------------------------------------
-
-class SystemRole(PersonRole, ServiceObjectDC):
-    __dataclass__ = SystemRoleDC
-    __mapper_args__ = {
-        "polymorphic_identity": "system_role",
-    }
-
-
-# ---------------------------------------------------------------------------
-# Association Models
-# ---------------------------------------------------------------------------
-
-class PersonRoleToOrganizationRole(db.Model):
-    """Pure link table between PersonRole and OrganizationRole."""
-
-    __tablename__ = "person_role_to_organization_role"
-
-    person_role_id: Mapped[str] = mapped_column(
-        ForeignKey("party_role.id"), primary_key=True
-    )
-    organization_role_id: Mapped[str] = mapped_column(
-        ForeignKey("party_role.id"), primary_key=True
-    )
-
-
 class OrganizationManagedPersonAssociation(ServiceObject, db.Model):
     """OrgRole manages a PersonRole (e.g., patient under clinic, user under tenant)."""
 
@@ -200,10 +117,15 @@ class OrganizationManagedPersonAssociation(ServiceObject, db.Model):
     )
 
     __table_args__ = (
-        UniqueConstraint("organization_role_id", "person_role_id", name="uix_managed_person_organization"),
+        UniqueConstraint(
+            "organization_role_id", "person_role_id",
+            name="uix_managed_person_organization"
+        ),
     )
 
-
+# ---------------------------------------------------------------------------
+# OrganizationOwnerAssociation (1:M)
+# ---------------------------------------------------------------------------
 class OrganizationOwnerAssociation(ServiceObject, db.Model):
     """Indicates a PersonRole owns the OrganizationRole's organization."""
 
@@ -228,5 +150,94 @@ class OrganizationOwnerAssociation(ServiceObject, db.Model):
     )
 
     __table_args__ = (
-        UniqueConstraint("organization_role_id", "person_role_id", name="uix_owner_organization"),
+        UniqueConstraint(
+            "organization_role_id", "person_role_id",
+            name="uix_owner_organization"
+        ),
     )
+
+# ---------------------------------------------------------------------------
+# OrganizationRole (abstract subclass)
+# ---------------------------------------------------------------------------
+class OrganizationRole(PartyRole):
+    __mapper_args__ = {
+        "polymorphic_identity": "organization_role",
+    }
+    __dataclass__ = OrganizationRoleDC
+
+    # M:M PersonRole <-> OrganizationRole via standalone Table
+    person_roles = relationship(
+        "PersonRole",
+        secondary=person_role_to_organization_role,
+        primaryjoin=lambda: OrganizationRole.id == person_role_to_organization_role.c.organization_role_id,
+        secondaryjoin=lambda: PersonRole.id == person_role_to_organization_role.c.person_role_id,
+        back_populates="organization_roles",
+        lazy="selectin",
+    )
+
+    managed_person_roles = relationship(
+        "OrganizationManagedPersonAssociation",
+        back_populates="organization_role",
+        foreign_keys=[OrganizationManagedPersonAssociation.organization_role_id],
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    organization_owner_associations = relationship(
+        "OrganizationOwnerAssociation",
+        back_populates="organization_role",
+        foreign_keys=[OrganizationOwnerAssociation.organization_role_id],
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+# ---------------------------------------------------------------------------
+# PersonRole (abstract subclass)
+# ---------------------------------------------------------------------------
+class PersonRole(PartyRole):
+    __dataclass__ = PersonRoleDC
+    __mapper_args__ = {
+        "polymorphic_identity": "person_role",
+    }
+
+    is_staff_role: bool = False
+
+    # M:M OrganizationRole <-> PersonRole via standalone Table
+    organization_roles = relationship(
+        "OrganizationRole",
+        secondary=person_role_to_organization_role,
+        primaryjoin=lambda: PersonRole.id == person_role_to_organization_role.c.person_role_id,
+        secondaryjoin=lambda: OrganizationRole.id == person_role_to_organization_role.c.organization_role_id,
+        back_populates="person_roles",
+        lazy="selectin",
+    )
+
+    organization_managed_person_associations = relationship(
+        "OrganizationManagedPersonAssociation",
+        back_populates="person_role",
+        foreign_keys=[OrganizationManagedPersonAssociation.person_role_id],
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    organization_owner_associations = relationship(
+        "OrganizationOwnerAssociation",
+        back_populates="person_role",
+        foreign_keys=[OrganizationOwnerAssociation.person_role_id],
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+    def is_primary_role(self) -> bool:
+        return False
+
+    def can_own_organizations(self) -> bool:
+        return False
+
+# ---------------------------------------------------------------------------
+# Concrete Role Example
+# ---------------------------------------------------------------------------
+class SystemRole(PersonRole):
+    __dataclass__ = SystemRoleDC
+    __mapper_args__ = {
+        "polymorphic_identity": "system_role",
+    }

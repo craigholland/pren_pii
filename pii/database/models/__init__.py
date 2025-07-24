@@ -20,6 +20,7 @@ from pii.database.models.roles import (
     OrganizationManagedPersonAssociation
 )
 
+
 __all__ = [
     "PersonName",
     "MaritalStatus",

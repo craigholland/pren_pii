@@ -54,14 +54,14 @@ class PersonName(History, ServiceObjectDC):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     name_type: Mapped[PersonNameType] = mapped_column(SQLEnum(PersonNameType), nullable=False)
     person_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("person.id"), nullable=False)
-    person: Mapped["Person"] = relationship("Person", back_populates="names")
+    person: Mapped["Person"] = relationship("Person", foreign_keys=[person_id])
 
 class PersonGender(History, ServiceObjectDC):
     __tablename__ = "person_gender"
     __dataclass__ = PersonGenderDC
     gender: Mapped[GenderType] = mapped_column(SQLEnum(GenderType), nullable=False)
     person_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("person.id"), nullable=False)
-    person: Mapped["Person"] = relationship("Person", back_populates="genders")
+    person: Mapped["Person"] = relationship("Person", foreign_keys=[person_id])
 
 
 class MaritalStatus(History, ServiceObjectDC):
